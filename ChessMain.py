@@ -31,6 +31,51 @@ def main():
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     gs = ChessEngine.GameState()
-    print(gs.board)
+    loadImages() #only do this once, before the while loop
+    running = True
+    while running:
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                running = False
+        drawGameState(screen, gs)
+        
+                
 
-main()
+        clock.tick(MAX_FPS)
+        p.display.flip()
+
+
+def userInput():
+    
+
+'''
+Responsible for all tje graphics within a current game state.
+'''
+def drawGameState(screen, gs):
+    drawBoard(screen) #draw squares on the board
+    #add in piece highlighting or move suggestions (later)
+    drawPieces(screen, gs.board) #draw pieces on top of those sqaures
+
+'''
+Draw the squares on the board. The top left square is always light.
+'''
+def drawBoard(screen):
+    colors = [p.Color("white"), p.Color("dark green")]
+    for r in range(DIMESION):
+        for c in range(DIMESION):
+            color = colors[((r+c)%2)]
+            p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+'''
+Draw the pieces on the board using the current GameState.board
+'''
+def drawPieces(screen, board):
+    for r in range(DIMESION):
+        for c in range(DIMESION):
+            piece = board[r][c]
+            if piece != "--": #not empty square
+                screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+            
+if __name__ == '__main__':
+    main()
