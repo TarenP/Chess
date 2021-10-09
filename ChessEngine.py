@@ -18,4 +18,7 @@ class GameState():
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]]
         self.whiteToMove = True
+        #keep track of if a pawn has moved from its starting position for 2 forward move
+        
+
         self.moveLog = []
