@@ -59,18 +59,18 @@ def main():
                     #print(mx)
                     #print(my)
                     selectedCoord, selectedPiece = selectPiece(mx, my, gs.board, screen)
-                    #print(selectedCoord)
+                    print(selectedCoord)
                     possibleMoves(selectedCoord, gs, screen, selectedPiece)
                 else:
                     endCoord = movePiece(availableMoves, mx, my, gs.board, screen)
                     if endCoord == None:
                         break
-                    #print(selectedCoord)
-                    #print(endCoord)
+                    print(selectedCoord)
+                    print(endCoord)
                     move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
                     #print(gs.moveLog)
                     gs.makeMove(move)
-                    print(gs.board)
+                    #print(gs.board)
                     drawGameState(screen, gs)
                     alrSelected = False
 
@@ -101,7 +101,6 @@ def selectPiece(mx, my, board, screen):
             elif piece == "--":
                 selectedCoord = [-1, -1]
                 #print(selected) 
-        print(r)
     return selectedCoord, piece
 
 '''
@@ -117,6 +116,7 @@ def possibleMoves(selectedCoord, gs, screen, selectedPiece):
     #selectedCoord[0] = row; selectedCoord[1] = column
     #check if the pawn has already been moved
     #change coordinates to display the possible moves then revert the coordinates for future use
+    print(selectedPiece)
     if selectedPiece[1] == "P":
         if ('wP' + str(selectedCoord[1])) == "wP0":
             if wP0 == True:
@@ -222,7 +222,183 @@ def possibleMoves(selectedCoord, gs, screen, selectedPiece):
                 selectedCoord[0] -= 1
                 drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
                 selectedCoord[0] += 1
-            
+    
+    elif selectedPiece[1] == "R":
+        revert = 0
+        keepGoing = True
+        while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+            revert += 1       
+            selectedCoord[0] -= 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += revert
+
+        keepGoing = True
+        revert = 0
+        while selectedCoord[0] < 7 and keepGoing == True:
+            revert += 1       
+            print(revert)
+            selectedCoord[0] += 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= revert
+
+        revert = 0
+        keepGoing = True
+        while selectedCoord[1] > 0 and keepGoing == True:
+            revert += 1       
+            selectedCoord[1] -= 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[1] += revert
+
+        keepGoing = True
+        revert = 0
+        while selectedCoord[1] < 7 and keepGoing == True:
+            revert += 1       
+            print(revert)
+            selectedCoord[1] += 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[1] -= revert
+
+    elif  selectedPiece[1] == "B":
+        revert = 0
+        keepGoing = True
+        #diagnol up-right
+        try:
+            while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                revert += 1       
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 1
+                keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        except:
+            pass
+        keepGoing = False
+        selectedCoord[0] += revert
+        selectedCoord[1] -= revert
+
+        revert = 0
+        keepGoing = True
+        #diagnol up-left
+        try:
+            while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                revert += 1       
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 1
+                keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        except:
+            pass
+        keepGoing = False
+        selectedCoord[0] += revert
+        selectedCoord[1] += revert
+
+        revert = 0
+        keepGoing = True
+        #diagnol down-right
+        try:
+            while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                revert += 1       
+                selectedCoord[0] += 1
+                selectedCoord[1] += 1
+                keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        except:
+            pass
+        keepGoing = False
+        selectedCoord[0] -= revert
+        selectedCoord[1] -= revert
+
+        revert = 0
+        keepGoing = True
+        #diagnol down-left
+        try:
+            while keepGoing == True:
+                revert += 1       
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 1
+                keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        except:
+            pass
+        keepGoing = False
+        selectedCoord[0] -= revert
+        selectedCoord[1] += revert
+
+    elif selectedPiece[1] == "N":
+        #diagnol up-right
+        try:  
+            selectedCoord[0] -= 2
+            selectedCoord[1] += 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+            selectedCoord[0] += 2
+            selectedCoord[1] -= 1
+        except:
+            pass
+
+        #diagnol up-left
+        try:  
+            selectedCoord[0] -= 2
+            selectedCoord[1] -= 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+            selectedCoord[0] += 2
+            selectedCoord[1] += 1
+        except:
+            pass
+
+        #diagnol down-right
+        try:  
+            selectedCoord[0] += 2
+            selectedCoord[1] += 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+            selectedCoord[0] -= 2
+            selectedCoord[1] -= 1
+        except:
+            pass
+
+        # #diagnol down-left
+        # try:  
+        #     selectedCoord[0] += 2
+        #     selectedCoord[1] -= 1
+        #     keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        #     selectedCoord[0] -= 2
+        #     selectedCoord[1] += 1
+        # except:
+        #     pass
+
+        # #diagnol left-up
+        # try:  
+        #     selectedCoord[0] += 1
+        #     selectedCoord[1] -= 2
+        #     keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        #     selectedCoord[0] -= 1
+        #     selectedCoord[1] += 2
+        # except:
+        #     pass
+
+        # #diagnol left-down
+        # try:  
+        #     selectedCoord[0] -= 1
+        #     selectedCoord[1] -= 2
+        #     keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        #     selectedCoord[0] += 2
+        #     selectedCoord[1] += 1
+        # except:
+        #     pass
+
+        # #diagnol right-up
+        # try:  
+        #     selectedCoord[0] -= 1
+        #     selectedCoord[1] += 2
+        #     keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        #     selectedCoord[0] += 1
+        #     selectedCoord[1] -= 2
+        # except:
+        #     pass
+
+        # #diagnol up-left
+        # try:  
+        #     selectedCoord[0] += 1
+        #     selectedCoord[1] -= 2
+        #     keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        #     selectedCoord[0] -= 1
+        #     selectedCoord[1] += 2
+        # except:
+        #     pass
 '''
 Draw the possible moves. Used by possibleMoves to create a visual of the possible moves.
 Choice for color so I can easily change it so the ending spot for each possible move is a different color than the path
@@ -235,6 +411,9 @@ def drawPossibleMoves(coordinate, color, screen, board):
     availableMoves.append(coordinate[1])
     if piece == "--":
         p.draw.rect(screen, p.Color(color), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        return True
+    else:
+        return False
 
 '''
 Gets end coordinates for piece move.
