@@ -20,8 +20,14 @@ class GameState():
         self.whiteToMove = True
         #keep track of if a pawn has moved from its starting position for 2 forward move
         self.moveLog = []
+        self.whiteCapturedLog = []#Keep track of the white pieces that are captured
+        self.blackCapturedLog = []#Keep track of the black pieces that are captured
 
     def makeMove(self, move):
+        if self.whiteToMove == True:
+            self.blackCapturedLog.append(self.board[move.endRow][move.endCol])
+        else:
+            self.whiteCapturedLog.append(self.board[move.endRow][move.endCol])
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)#log the move so we can undo it later
