@@ -18,6 +18,7 @@ class GameState():
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]]
         self.whiteToMove = True
+        # self.enPassant = False
         #keep track of if a pawn has moved from its starting position for 2 forward move
         self.moveLog = []
         self.whiteCapturedLog = []#Keep track of the white pieces that are captured
@@ -30,8 +31,11 @@ class GameState():
             self.whiteCapturedLog.append(self.board[move.endRow][move.endCol])
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
+        # if self.enPassant == True:
+        #     self.board[move.endRow - 1][move.endCol] = "--"
         self.moveLog.append(move)#log the move so we can undo it later
         self.whiteToMove = not self.whiteToMove #swap players
+        self.enPassant = False
 
 class Move():
     #maps keys to values
