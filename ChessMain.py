@@ -17,6 +17,8 @@ SQ_SIZE = HEIGHT // DIMESION
 MAX_FPS = 15 #for animations later on
 IMAGES = {}
 
+availableMoves = []#avaible moves for selected piece
+
 #keep track of if a pawn has moved from its starting position for 2 forward move
 wP0 = True
 wP1 = True
@@ -777,6 +779,7 @@ def drawPossibleMovesP(coordinate, color, screen, board, firstMove):
         except:
             pass
         coordinate[1] += 1
+        #region EnPassant
         #En Passant attack: attack diagnally behind enemy piece to capture it
         # try:
         #     coordinate[0] +=1
@@ -812,11 +815,9 @@ def drawPossibleMovesP(coordinate, color, screen, board, firstMove):
         # except:
         #     pass
         # coordinate[1] += 1
-
+        #endregion
         #print("after "+ str(coordinate))
     elif gs.whiteToMove == False:
-        if piece == "w":
-            return False
         #check if there is an enemy piece for the white pawn diagnally to attack
         try:
             coordinate[1] -= 1
