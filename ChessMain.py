@@ -19,6 +19,8 @@ IMAGES = {}
 
 availableMoves = []#avaible moves for selected piece
 
+check = False #for UI. Don't want people seeing the program running move checks. 
+solved = False#is the check still there or is it solved
 #keep track of if a pawn has moved from its starting position for 2 forward move
 wP0 = True
 wP1 = True
@@ -840,7 +842,6 @@ def drawPossibleMovesP(coordinate, color, screen, board, firstMove):
         except:
             pass
         coordinate[1] -= 1
-
     drawPieces(screen, board)
 
 '''
@@ -1484,7 +1485,10 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
             piece = board[coordinate[0]][coordinate[1]]
             if piece == "bK":
                 p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                check()
+                if check == True:
+                    solved = False
+                else:
+                    check(piece, True, screen)
         except:
             pass
         coordinate[1] -= 1
@@ -1493,7 +1497,10 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
             piece = board[coordinate[0]][coordinate[1]]
             if piece == "bK":
                 p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                check()
+                if check == True:
+                    solved = False
+                else:
+                    check(piece, True, screen)
         except:
             pass
         coordinate[1] += 1
@@ -1506,7 +1513,10 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
             piece = board[coordinate[0]][coordinate[1]]
             if piece == "wK":
                 p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                check()
+                if check == True:
+                    solved = False
+                else:
+                    check(piece, False, screen)
         except:
             pass
         coordinate[1] += 1
@@ -1516,12 +1526,15 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
             piece = board[coordinate[0]][coordinate[1]]
             if piece == "wK":
                 p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                check()
+                if check == True:
+                    solved = False
+                else:
+                    check(piece, False, screen)
         except:
             pass
         coordinate[1] -= 1
-
-    drawPieces(screen, board)
+    if check == False:
+        drawPieces(screen, board)
 
 def drawCheckMoves(coordinate, screen, board, isWhite):
     if coordinate[0] < 0 or coordinate[0] > 7:
@@ -1532,17 +1545,52 @@ def drawCheckMoves(coordinate, screen, board, isWhite):
     if isWhite: #The function is called after white has already moved, but black hasn't moved yet. Scan for check on black king
         if piece == "bK":
             p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-            check()
+            check(piece, True)
     elif isWhite == False:
         if piece == "wK":
             p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-            check()
+            check(piece, False)
 
 '''
 Called when the king is in check. Used for the logic behind getting out of check.
 '''
-def check():
+def check(coordOfCheck, blackIsInCheck, screen):
     print("check")
+    # if blackIsInCheck:
+    #     #go through all possible black moves and append the ones that stop the check to avaibleMoves
+    #     #run check for check after each 
+    #     check = True
+    #     pieces = []
+    #     workingMoves = []
+    #     for r in range(DIMESION):
+    #             for c in range(DIMESION):
+    #                 piece = gs.board[r][c]
+    #                 if piece[0] == "b":
+    #                     selectedCoord = [r, c]
+    #                     possibleMoves(selectedCoord, gs, screen, piece)
+    #                     if availableMoves == []:
+    #                         print("checkmate")
+    #                     for x in len(availableMoves/2):
+    #                         if x % 2 != 1:
+    #                             c = availableMoves[x]
+    #                             r = availableMoves[x - 1]
+    #                         else:
+    #                             c = availableMoves[x + 1]
+    #                             r = availableMoves[x]
+    #                         endCoord = [r, c]
+    #                         move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
+    #                         gs.makeMove(move)
+    #                         checkScanner(screen)
+    #                         if solved == True:
+    #                             workingMoves.append(endCoord[0])
+    #                             workingMoves.append(endCoord[1])
+    #                         move = ChessEngine.Move(endCoord, selectedCoord, gs.board)
+    #                         gs.makeMove(move)
+    # print("jsadiohjasoi")
+    # print(workingMoves)
+
+
+
 
 
 '''
