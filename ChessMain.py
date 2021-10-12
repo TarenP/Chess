@@ -176,7 +176,7 @@ def possibleMoves(selectedCoord, gs, screen, selectedPiece):
             if ('wP' + str(selectedCoord[1])) == "wP0":
                 if wP0 == True:
                     selectedCoord[0] -= 2
-                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP0)
+                    drawPossibleMovesP(selectedCoord, " ", screen, gs.board, wP0)
                     selectedCoord[0] += 2
                     selectedCoord[0] -= 1
                     drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
@@ -886,7 +886,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 1
             elif piece == "bP":
                 selectedCoord[0] += 1
-                drawCheckMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                drawCheckMovesP(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= 1
             elif piece == "wR":
                 revert = 0
@@ -894,7 +894,7 @@ def checkScanner(screen):
                 while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
                     revert += 1       
                     selectedCoord[0] -= 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] += revert
 
                 keepGoing = True
@@ -902,7 +902,7 @@ def checkScanner(screen):
                 while selectedCoord[0] < 7 and keepGoing == True:
                     revert += 1       
                     selectedCoord[0] += 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= revert
 
                 revert = 0
@@ -910,7 +910,7 @@ def checkScanner(screen):
                 while selectedCoord[1] > 0 and keepGoing == True:
                     revert += 1       
                     selectedCoord[1] -= 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[1] += revert
 
                 keepGoing = True
@@ -918,7 +918,7 @@ def checkScanner(screen):
                 while selectedCoord[1] < 7 and keepGoing == True:
                     revert += 1       
                     selectedCoord[1] += 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[1] -= revert
 
             elif piece == "bR":
@@ -927,7 +927,7 @@ def checkScanner(screen):
                 while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
                     revert += 1       
                     selectedCoord[0] -= 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] += revert
 
                 keepGoing = True
@@ -1041,7 +1041,7 @@ def checkScanner(screen):
                             revert += 1       
                             selectedCoord[0] -= 1
                             selectedCoord[1] -= 1
-                            keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                            keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                     except:
                         pass
                     keepGoing = False
@@ -1056,7 +1056,7 @@ def checkScanner(screen):
                             revert += 1       
                             selectedCoord[0] += 1
                             selectedCoord[1] += 1
-                            keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                            keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                     except:
                         pass
                     keepGoing = False
@@ -1071,7 +1071,7 @@ def checkScanner(screen):
                             revert += 1       
                             selectedCoord[0] += 1
                             selectedCoord[1] -= 1
-                            keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                            keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                     except:
                         pass
                     keepGoing = False
@@ -1083,7 +1083,7 @@ def checkScanner(screen):
                 selectedCoord[0] -= 2
                 selectedCoord[1] += 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] += 2
                 selectedCoord[1] -= 1
 
@@ -1091,7 +1091,7 @@ def checkScanner(screen):
                 selectedCoord[0] -= 2
                 selectedCoord[1] -= 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] += 2
                 selectedCoord[1] += 1
 
@@ -1099,7 +1099,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 2
                 selectedCoord[1] += 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= 2
                 selectedCoord[1] -= 1
 
@@ -1107,7 +1107,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 2
                 selectedCoord[1] -= 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= 2
                 selectedCoord[1] += 1
 
@@ -1115,7 +1115,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 2
 
@@ -1123,7 +1123,7 @@ def checkScanner(screen):
                 selectedCoord[0] -= 1
                 selectedCoord[1] -= 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] += 1
                 selectedCoord[1] += 2
 
@@ -1131,7 +1131,7 @@ def checkScanner(screen):
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 2
 
@@ -1139,7 +1139,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 1
                 selectedCoord[1] += 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= 1
                 selectedCoord[1] -= 2
 
@@ -1147,7 +1147,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 2
 
@@ -1156,7 +1156,7 @@ def checkScanner(screen):
                 selectedCoord[0] -= 2
                 selectedCoord[1] += 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] += 2
                 selectedCoord[1] -= 1
 
@@ -1164,7 +1164,7 @@ def checkScanner(screen):
                 selectedCoord[0] -= 2
                 selectedCoord[1] -= 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] += 2
                 selectedCoord[1] += 1
 
@@ -1172,7 +1172,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 2
                 selectedCoord[1] += 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= 2
                 selectedCoord[1] -= 1
 
@@ -1180,7 +1180,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 2
                 selectedCoord[1] -= 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= 2
                 selectedCoord[1] += 1
 
@@ -1188,7 +1188,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 2
 
@@ -1196,7 +1196,7 @@ def checkScanner(screen):
                 selectedCoord[0] -= 1
                 selectedCoord[1] -= 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] += 1
                 selectedCoord[1] += 2
 
@@ -1204,7 +1204,7 @@ def checkScanner(screen):
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 2
 
@@ -1212,7 +1212,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 1
                 selectedCoord[1] += 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= 1
                 selectedCoord[1] -= 2
 
@@ -1220,7 +1220,7 @@ def checkScanner(screen):
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 2
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 2
 
@@ -1231,7 +1231,7 @@ def checkScanner(screen):
                 while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
                     revert += 1       
                     selectedCoord[0] -= 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] += revert
 
                 keepGoing = True
@@ -1239,7 +1239,7 @@ def checkScanner(screen):
                 while selectedCoord[0] < 7 and keepGoing == True:
                     revert += 1       
                     selectedCoord[0] += 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= revert
 
                 revert = 0
@@ -1247,7 +1247,7 @@ def checkScanner(screen):
                 while selectedCoord[1] > 0 and keepGoing == True:
                     revert += 1       
                     selectedCoord[1] -= 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[1] += revert
 
                 keepGoing = True
@@ -1255,7 +1255,7 @@ def checkScanner(screen):
                 while selectedCoord[1] < 7 and keepGoing == True:
                     revert += 1       
                     selectedCoord[1] += 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[1] -= revert
 
                 #Bishop attributes
@@ -1267,7 +1267,7 @@ def checkScanner(screen):
                         revert += 1       
                         selectedCoord[0] -= 1
                         selectedCoord[1] += 1
-                        keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 except:
                     pass
                 keepGoing = False
@@ -1282,7 +1282,7 @@ def checkScanner(screen):
                         revert += 1       
                         selectedCoord[0] -= 1
                         selectedCoord[1] -= 1
-                        keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 except:
                     pass
                 keepGoing = False
@@ -1297,7 +1297,7 @@ def checkScanner(screen):
                         revert += 1       
                         selectedCoord[0] += 1
                         selectedCoord[1] += 1
-                        keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 except:
                     pass
                 keepGoing = False
@@ -1312,7 +1312,7 @@ def checkScanner(screen):
                         revert += 1       
                         selectedCoord[0] += 1
                         selectedCoord[1] -= 1
-                        keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 except:
                     pass
                 keepGoing = False
@@ -1323,25 +1323,25 @@ def checkScanner(screen):
                 selectedCoord[0] -= 1
                 selectedCoord[1] -= 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] += 1
                 selectedCoord[1] += 1
                 selectedCoord[0] += 1
                 selectedCoord[1] += 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= 1
                 selectedCoord[1] -= 1
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 1
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, True)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 1
 
@@ -1352,7 +1352,7 @@ def checkScanner(screen):
                 while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
                     revert += 1       
                     selectedCoord[0] -= 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] += revert
 
                 keepGoing = True
@@ -1360,7 +1360,7 @@ def checkScanner(screen):
                 while selectedCoord[0] < 7 and keepGoing == True:
                     revert += 1       
                     selectedCoord[0] += 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= revert
 
                 revert = 0
@@ -1368,7 +1368,7 @@ def checkScanner(screen):
                 while selectedCoord[1] > 0 and keepGoing == True:
                     revert += 1       
                     selectedCoord[1] -= 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[1] += revert
 
                 keepGoing = True
@@ -1376,7 +1376,7 @@ def checkScanner(screen):
                 while selectedCoord[1] < 7 and keepGoing == True:
                     revert += 1       
                     selectedCoord[1] += 1
-                    keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[1] -= revert
 
                 #Bishop attributes
@@ -1388,7 +1388,7 @@ def checkScanner(screen):
                         revert += 1       
                         selectedCoord[0] -= 1
                         selectedCoord[1] += 1
-                        keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 except:
                     pass
                 keepGoing = False
@@ -1403,7 +1403,7 @@ def checkScanner(screen):
                         revert += 1       
                         selectedCoord[0] -= 1
                         selectedCoord[1] -= 1
-                        keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 except:
                     pass
                 keepGoing = False
@@ -1418,7 +1418,7 @@ def checkScanner(screen):
                         revert += 1       
                         selectedCoord[0] += 1
                         selectedCoord[1] += 1
-                        keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 except:
                     pass
                 keepGoing = False
@@ -1433,7 +1433,7 @@ def checkScanner(screen):
                         revert += 1       
                         selectedCoord[0] += 1
                         selectedCoord[1] -= 1
-                        keepGoing = drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                        keepGoing = drawCheckMoves(selectedCoord , screen, gs.board, False)
                 except:
                     pass
                 keepGoing = False
@@ -1444,25 +1444,25 @@ def checkScanner(screen):
                 selectedCoord[0] -= 1
                 selectedCoord[1] -= 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] += 1
                 selectedCoord[1] += 1
                 selectedCoord[0] += 1
                 selectedCoord[1] += 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= 1
                 selectedCoord[1] -= 1
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 1
                 selectedCoord[0] -= 1
                 selectedCoord[1] += 1
                 if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
-                    drawCheckMoves(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
                 selectedCoord[0] += 1
                 selectedCoord[1] -= 1
 '''
