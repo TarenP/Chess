@@ -1546,11 +1546,11 @@ def drawCheckMoves(coordinate, screen, board, isWhite):
     if isWhite: #The function is called after white has already moved, but black hasn't moved yet. Scan for check on black king
         if piece == "bK":
             p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-            check(piece, True)
+            check(piece, True, screen)
     elif isWhite == False:
         if piece == "wK":
             p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-            check(piece, False)
+            check(piece, False, screen)
 
 '''
 Called when the king is in check. Used for the logic behind getting out of check.
@@ -1568,27 +1568,35 @@ def check(coordOfCheck, blackIsInCheck, screen):
                 piece = gs.board[r][c]
                 if piece[0] == "b":
                     selectedCoord = [r, c]
-                    print(selectedCoord)
+                    # print(selectedCoord)
                     possibleMoves(selectedCoord, gs, screen, piece)
-                    if availableMoves == []:
-                        print("checkmate")
-                    print(availableMoves)
-    #                     for x in len(availableMoves/2):
-    #                         if x % 2 != 1:
-    #                             c = availableMoves[x]
-    #                             r = availableMoves[x - 1]
-    #                         else:
-    #                             c = availableMoves[x + 1]
-    #                             r = availableMoves[x]
-    #                         endCoord = [r, c]
-    #                         move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
-    #                         gs.makeMove(move)
-    #                         checkScanner(screen)
-    #                         if solved == True:
-    #                             workingMoves.append(endCoord[0])
-    #                             workingMoves.append(endCoord[1])
-    #                         move = ChessEngine.Move(endCoord, selectedCoord, gs.board)
-    #                         gs.makeMove(move)
+                    if availableMoves != []:
+                        print(piece)
+                        # print(availableMoves)
+                        # print(len(availableMoves))
+                        # print(len(availableMoves)/2)
+
+                        for x in range(len(availableMoves)):
+                            if x % 2 != 1:
+                                c = availableMoves[x]
+                                r = availableMoves[x - 1]
+                            else:
+                                c = availableMoves[x + 1]
+                                r = availableMoves[x]
+                            endCoord = [r, c]
+                            move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
+                            gs.makeMove(move)
+                            checkScanner(screen)
+                            if solved == True:
+                                workingMoves.append(endCoord[0])
+                                workingMoves.append(endCoord[1])
+                            move = ChessEngine.Move(endCoord, selectedCoord, gs.board)
+                            gs.makeMove(move)
+                    # if availableMoves == []:
+                    #     print("checkmate")
+                    #     # break
+
+                
     # print("jsadiohjasoi")
     # print(workingMoves)
 
