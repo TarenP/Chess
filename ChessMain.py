@@ -19,7 +19,7 @@ IMAGES = {}
 
 availableMoves = []#avaible moves for selected piece
 
-check = False #for UI. Don't want people seeing the program running move checks. 
+checkBool = False #for UI. Don't want people seeing the program running move checks. 
 solved = False#is the check still there or is it solved
 #keep track of if a pawn has moved from its starting position for 2 forward move
 wP0 = True
@@ -1485,9 +1485,10 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
             piece = board[coordinate[0]][coordinate[1]]
             if piece == "bK":
                 p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                if check == True:
+                if checkBool == True:
                     solved = False
                 else:
+                    print
                     check(piece, True, screen)
         except:
             pass
@@ -1497,7 +1498,7 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
             piece = board[coordinate[0]][coordinate[1]]
             if piece == "bK":
                 p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                if check == True:
+                if checkBool == True:
                     solved = False
                 else:
                     check(piece, True, screen)
@@ -1513,7 +1514,7 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
             piece = board[coordinate[0]][coordinate[1]]
             if piece == "wK":
                 p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                if check == True:
+                if checkBool == True:
                     solved = False
                 else:
                     check(piece, False, screen)
@@ -1526,14 +1527,14 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
             piece = board[coordinate[0]][coordinate[1]]
             if piece == "wK":
                 p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                if check == True:
+                if checkBool == True:
                     solved = False
                 else:
                     check(piece, False, screen)
         except:
             pass
         coordinate[1] -= 1
-    if check == False:
+    if checkBool == False:
         drawPieces(screen, board)
 
 def drawCheckMoves(coordinate, screen, board, isWhite):
@@ -1556,20 +1557,22 @@ Called when the king is in check. Used for the logic behind getting out of check
 '''
 def check(coordOfCheck, blackIsInCheck, screen):
     print("check")
-    # if blackIsInCheck:
-    #     #go through all possible black moves and append the ones that stop the check to avaibleMoves
-    #     #run check for check after each 
-    #     check = True
-    #     pieces = []
-    #     workingMoves = []
-    #     for r in range(DIMESION):
-    #             for c in range(DIMESION):
-    #                 piece = gs.board[r][c]
-    #                 if piece[0] == "b":
-    #                     selectedCoord = [r, c]
-    #                     possibleMoves(selectedCoord, gs, screen, piece)
-    #                     if availableMoves == []:
-    #                         print("checkmate")
+    if blackIsInCheck:
+        #go through all possible black moves and append the ones that stop the check to avaibleMoves
+        #run check for check after each 
+        checkBool = True
+        pieces = []
+        workingMoves = []
+        for r in range(DIMESION):
+            for c in range(DIMESION):
+                piece = gs.board[r][c]
+                if piece[0] == "b":
+                    selectedCoord = [r, c]
+                    print(selectedCoord)
+                    possibleMoves(selectedCoord, gs, screen, piece)
+                    if availableMoves == []:
+                        print("checkmate")
+                    print(availableMoves)
     #                     for x in len(availableMoves/2):
     #                         if x % 2 != 1:
     #                             c = availableMoves[x]
