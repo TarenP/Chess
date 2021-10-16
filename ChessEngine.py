@@ -9,7 +9,7 @@ class GameState():
         #The second character represents the type of piece, 'K', 'Q', 'R', 'B', 'N', or 'P'
         #"--" represents and empty space with no piece
         self.board = [
-            ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
+            ["bR", "bN", "bB", "bQ", "--", "bB", "bN", "bR"],
             ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -18,6 +18,7 @@ class GameState():
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]]
         self.whiteToMove = True
+        self.resetPiece = False#used to tell if we need to reset a move
         # self.enPassant = False
         #keep track of if a pawn has moved from its starting position for 2 forward move
         self.moveLog = []
@@ -25,12 +26,21 @@ class GameState():
         self.blackCapturedLog = []#Keep track of the black pieces that are captured
 
     def makeMove(self, move):
-        if self.whiteToMove == True:
-            self.blackCapturedLog.append(self.board[move.endRow][move.endCol])
+        # if self.whiteToMove == True:
+        #     self.blackCapturedLog.append(self.board[move.endRow][move.endCol])
+        # else:
+        #     self.whiteCapturedLog.append(self.board[move.endRow][move.endCol])
+        if self.resetPiece:
+            self.board[move.startRow][move.startCol] = self.storePiece
+            print(self.storePiece)
+            self.board[move.endRow][move.endCol] = move.pieceMoved
         else:
-            self.whiteCapturedLog.append(self.board[move.endRow][move.endCol])
-        self.board[move.startRow][move.startCol] = "--"
-        self.board[move.endRow][move.endCol] = move.pieceMoved
+            self.storePiece = self.board[move.endRow][move.endCol] #stores the piece so the move can be undone
+            self.board[move.startRow][move.startCol] = "--"
+            self.board[move.endRow][move.endCol] = move.pieceMoved
+            print(move.endRow)
+            print(move.endCol)
+
         # if self.enPassant == True:
         #     self.board[move.endRow - 1][move.endCol] = "--"
         self.moveLog.append(move)#log the move so we can undo it later
@@ -51,6 +61,8 @@ class Move():
         self.startCol = startSq[1]
         self.endRow = endSq[0]
         self.endCol = endSq[1]
+        print(self.endRow)
+        print(self.endCol)
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
 

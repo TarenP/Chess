@@ -178,7 +178,7 @@ def possibleMoves(selectedCoord, gs, screen, selectedPiece):
             if ('wP' + str(selectedCoord[1])) == "wP0":
                 if wP0 == True:
                     selectedCoord[0] -= 2
-                    drawPossibleMovesP(selectedCoord, " ", screen, gs.board, wP0)
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP0)
                     selectedCoord[0] += 2
                     selectedCoord[0] -= 1
                     drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
@@ -1470,6 +1470,7 @@ def checkScanner(screen):
 Checks the possible moves for the piece to see if it checks the king
 '''
 def drawCheckMovesP(coordinate, screen, board, isWhite):
+    global solved, checkBool
     if coordinate[0] < 0 or coordinate[0] > 7:
         return False
     if coordinate[1] < 0 or coordinate[1] > 7:
@@ -1477,128 +1478,168 @@ def drawCheckMovesP(coordinate, screen, board, isWhite):
     piece = board[coordinate[0]][coordinate[1]]
     #print("piece " + piece)
     #print("piece's coord " + str(coordinate[0]) + " " + str(coordinate[1]))
-    if isWhite:
-        #check if there is an enemy piece for the white pawn diagnally to attack
-        try:
-            coordinate[1] += 1
-            #print("Diagnal attack " + str(coordinate))
-            piece = board[coordinate[0]][coordinate[1]]
-            if piece == "bK":
-                p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                if checkBool == True:
-                    solved = False
-                else:
-                    print
-                    check(piece, True, screen)
-        except:
-            pass
-        coordinate[1] -= 1
-        try:
-            coordinate[1] -= 1
-            piece = board[coordinate[0]][coordinate[1]]
-            if piece == "bK":
-                p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                if checkBool == True:
-                    solved = False
-                else:
-                    check(piece, True, screen)
-        except:
-            pass
+    #check if there is an enemy piece for the white pawn diagnally to attack
+    try:
         coordinate[1] += 1
+        #print("Diagnal attack " + str(coordinate))
+        piece = board[coordinate[0]][coordinate[1]]
+        if piece == "bK":
+            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if checkBool == True:
+                solved = False #change check to unresolved
+            else:
+                solved = False
+                check(piece, True, screen)
+    except:
+        solved = True
+    coordinate[1] -= 1
+    try:
+        coordinate[1] -= 1
+        piece = board[coordinate[0]][coordinate[1]]
+        if piece == "bK":
+            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if checkBool == True:
+                solved = False
+            else:
+                solved = False
+                check(piece, True, screen)
+    except:
+        solved = True
+    coordinate[1] += 1
 
-            #print("after "+ str(coordinate))
-    elif isWhite == False:
-        #check if there is an enemy piece for the white pawn diagnally to attack
-        try:
-            coordinate[1] -= 1
-            piece = board[coordinate[0]][coordinate[1]]
-            if piece == "wK":
-                p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                if checkBool == True:
-                    solved = False
-                else:
-                    check(piece, False, screen)
-        except:
-            pass
-        coordinate[1] += 1
-        try:
-            coordinate[1] += 1
-            #print(coordinate)
-            piece = board[coordinate[0]][coordinate[1]]
-            if piece == "wK":
-                p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-                if checkBool == True:
-                    solved = False
-                else:
-                    check(piece, False, screen)
-        except:
-            pass
+    #print("after "+ str(coordinate))
+    #check if there is an enemy piece for the white pawn diagnally to attack
+    try:
         coordinate[1] -= 1
-    if checkBool == False:
-        drawPieces(screen, board)
+        piece = board[coordinate[0]][coordinate[1]]
+        if piece == "wK":
+            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if checkBool == True:
+                solved = False
+            else:
+                solved = False
+                check(piece, False, screen)
+    except:
+        solved = True
+    coordinate[1] += 1
+    try:
+        coordinate[1] += 1
+        #print(coordinate)
+        piece = board[coordinate[0]][coordinate[1]]
+        if piece == "wK":
+            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if checkBool == True:
+                solved = False
+            else:
+                solved = False
+                check(piece, False, screen)
+    except:
+        solved = True
+    coordinate[1] -= 1
+    drawGameState(screen, gs)
 
 def drawCheckMoves(coordinate, screen, board, isWhite):
+    global solved, checkBool
     if coordinate[0] < 0 or coordinate[0] > 7:
         return False
     if coordinate[1] < 0 or coordinate[1] > 7:
         return False
     piece = board[coordinate[0]][coordinate[1]]
-    if isWhite: #The function is called after white has already moved, but black hasn't moved yet. Scan for check on black king
-        if piece == "bK":
-            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+    if piece == "bK":
+        p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        if checkBool == True:
+                solved = False #change check to unresolved
+        else:
+            solved = False
             check(piece, True, screen)
-    elif isWhite == False:
-        if piece == "wK":
-            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+    elif piece == "wK":
+        p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        if checkBool == True:
+                solved = False #change check to unresolved
+        else:
+            solved = False
             check(piece, False, screen)
+    else:
+        solved = True
+    drawGameState(screen, gs)
+
 
 '''
 Called when the king is in check. Used for the logic behind getting out of check.
 '''
 def check(coordOfCheck, blackIsInCheck, screen):
+    global checkBool, solved
     print("check")
+    checkBool = True
     if blackIsInCheck:
         #go through all possible black moves and append the ones that stop the check to avaibleMoves
         #run check for check after each 
-        checkBool = True
         pieces = []
-        workingMoves = []
+        rEndWorkingMoves = []
+        cEndWorkingMoves = []
+        rStartWorkingMoves = []
+        cStartWorkingMoves = []
         for r in range(DIMESION):
             for c in range(DIMESION):
                 piece = gs.board[r][c]
                 if piece[0] == "b":
+                    #print(piece)
                     selectedCoord = [r, c]
                     # print(selectedCoord)
                     possibleMoves(selectedCoord, gs, screen, piece)
                     if availableMoves != []:
-                        print(piece)
+                        # print(piece)
                         # print(availableMoves)
-                        # print(len(availableMoves))
-                        # print(len(availableMoves)/2)
-
-                        for x in range(len(availableMoves)):
-                            if x % 2 != 1:
-                                c = availableMoves[x]
-                                r = availableMoves[x - 1]
+                        cList = []
+                        rList = []
+                        for y in range(len(availableMoves)):
+                            if y%2 == 0:
+                                rList.append(availableMoves[y])
                             else:
-                                c = availableMoves[x + 1]
-                                r = availableMoves[x]
+                                cList.append(availableMoves[y])
+                            # print(availableMoves)
+                            # print(rList)
+                            # print(cList)
+                        for x in range(len(rList)):
+                            r = rList[x]
+                            c = cList[x]
                             endCoord = [r, c]
                             move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
+                            # print(selectedCoord)
+                            # print(endCoord)
                             gs.makeMove(move)
                             checkScanner(screen)
                             if solved == True:
-                                workingMoves.append(endCoord[0])
-                                workingMoves.append(endCoord[1])
+                                rEndWorkingMoves.append(endCoord[0])
+                                cEndWorkingMoves.append(endCoord[1])
+                                rStartWorkingMoves.append(selectedCoord[0])
+                                cStartWorkingMoves.append(selectedCoord[1])
+                                print(rEndWorkingMoves)
+                                solved = False
+                            gs.resetPiece = True
                             move = ChessEngine.Move(endCoord, selectedCoord, gs.board)
                             gs.makeMove(move)
-                    # if availableMoves == []:
-                    #     print("checkmate")
-                    #     # break
-
-                
-    # print("jsadiohjasoi")
-    # print(workingMoves)
+                            gs.resetPiece = False
+                    if rEndWorkingMoves == []:
+                        print("checkmate")
+                        # break
+        #Get positions of all black pieces on board
+        num = random.randrange(len(rEndWorkingMoves))
+        r = rEndWorkingMoves[num]
+        c = cEndWorkingMoves[num]
+        endCoord = [rEndWorkingMoves[num], cEndWorkingMoves[num]]
+        print(endCoord)
+        print(gs.board)
+        selectedPiece = gs.board[r][c]
+        selectedCoord = [r, c]
+        move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
+        print("dsauas")
+        gs.makeMove(move)
+        print(gs.board)
+        print("ashfashoasfhfioas")
+        #checkScanner(screen)
+    drawGameState(screen, gs)
+    checkBool = False
 
 
 
