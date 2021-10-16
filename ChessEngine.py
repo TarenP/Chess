@@ -19,6 +19,8 @@ class GameState():
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]]
         self.whiteToMove = True
         self.resetPiece = False#used to tell if we need to reset a move
+        self.whiteKingLocation = (7, 4)
+        self.blackKingLocation = (0, 4)
         # self.enPassant = False
         #keep track of if a pawn has moved from its starting position for 2 forward move
         self.moveLog = []
@@ -38,8 +40,6 @@ class GameState():
             self.storePiece = self.board[move.endRow][move.endCol] #stores the piece so the move can be undone
             self.board[move.startRow][move.startCol] = "--"
             self.board[move.endRow][move.endCol] = move.pieceMoved
-            print(move.endRow)
-            print(move.endCol)
 
         # if self.enPassant == True:
         #     self.board[move.endRow - 1][move.endCol] = "--"
