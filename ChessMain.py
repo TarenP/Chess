@@ -63,22 +63,21 @@ def main():
     gs = ChessEngine.GameState()
     validMoves = gs.getValidMoves()
     moveMade = False #flag variable for when a move is made
-    selectedCoord = [-1, -1]  #assign selected a coordinate value so I don't get any variable unassigned errors
-    selectedPiece = "--" #assign selected to nothing by default
     loadImages() #only do this once, before the while loop
     running = True
-    alrSelected = False #Once a piece is selected, it has to be moved.
+    game_over = False
     sqSelected = () # not square is selected
     playerClicks = [] #keep track of player clicks
     drawGameState(screen, gs)
     while running:
         for e in p.event.get():
             #White's turn
-            if e.type == p.MOUSEBUTTONDOWN:
+            if e.type == p.MOUSEBUTTONDOWN and game_over == False:
                 if e.button == 1:
                     location = p.mouse.get_pos()
                     col = location[0]//SQ_SIZE
                     row = location[1]//SQ_SIZE
+                    piece = gs.board[row][col]
                     if sqSelected == (row, col): #the user clicked the same square twice
                         sqSelected = ()
                         playerClicks = [] #clear player clicks
@@ -100,6 +99,17 @@ def main():
         if moveMade:
             validMoves = gs.getValidMoves()
             moveMade = False
+        
+        if gs.checkmate:
+            game_over = True
+            if gs.white_to_move:
+                print("Black wins by checkmate")
+            else:
+                print("White wins by checkmate")
+
+        elif gs.stalemate:
+            game_over = True
+            print("Stalemate")
 
         clock.tick(MAX_FPS)
         p.display.flip()
