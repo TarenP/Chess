@@ -110,7 +110,7 @@ def main():
         elif gs.stalemate:
             game_over = True
             print("Stalemate")
-
+        drawGameState(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
 

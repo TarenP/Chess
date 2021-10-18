@@ -218,6 +218,7 @@ class GameState():
             self.stalemate = False
 
         self.current_castling_rights = temp_castle_rights
+
         return moves
 
     def inCheck(self):
