@@ -19,8 +19,8 @@ IMAGES = {}
 
 availableMoves = []#avaible moves for selected piece
 
-rCheckMoves = []
-cCheckMoves = []
+checkBool = False #for UI. Don't want people seeing the program running move checks. 
+solved = False#is the check still there or is it solved
 #keep track of if a pawn has moved from its starting position for 2 forward move
 wP0 = True
 wP1 = True
@@ -61,58 +61,1589 @@ def main():
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     gs = ChessEngine.GameState()
-    validMoves = gs.getValidMoves()
-    moveMade = False #flag variable for when a move is made
+    selectedCoord = [-1, -1]  #assign selected a coordinate value so I don't get any variable unassigned errors
+    selectedPiece = "--" #assign selected to nothing by default
     loadImages() #only do this once, before the while loop
     running = True
-    game_over = False
-    sqSelected = () # not square is selected
-    playerClicks = [] #keep track of player clicks
+    alrSelected = False #Once a piece is selected, it has to be moved.
     drawGameState(screen, gs)
     while running:
+        mx, my = p.mouse.get_pos() #gets mouse position, only captures position when cursor is in pygame window
         for e in p.event.get():
             #White's turn
-            if e.type == p.MOUSEBUTTONDOWN and game_over == False:
-                if e.button == 1:
-                    location = p.mouse.get_pos()
-                    col = location[0]//SQ_SIZE
-                    row = location[1]//SQ_SIZE
-                    piece = gs.board[row][col]
-                    if sqSelected == (row, col): #the user clicked the same square twice
-                        sqSelected = ()
-                        playerClicks = [] #clear player clicks
-                    else:
-                        sqSelected = (row, col)
-                        playerClicks.append(sqSelected)#append for both 1st and 2nd clicks
-                    if len(playerClicks) == 2: #after 2 clicks
-                        move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        if move in validMoves:
-                            gs.makeMove(move)
-                            moveMade = True
-                        sqSelected = () #reset clicks
-                        drawGameState(screen, gs)
-                        playerClicks = []
+            if e.type == MOUSEBUTTONDOWN:
+                if e.button == 1 and alrSelected == False and gs.whiteToMove == True:
+                    alrSelected = True
+                    #print(mx)
+                    #print(my)
+                    selectedCoord, selectedPiece = selectPiece(mx, my, gs.board, screen)
+                    if selectedCoord == [-1, -1]:
+                        alrSelected = False
+                    possibleMoves(selectedCoord, gs, screen, selectedPiece)
+                    if availableMoves == []:
+                        alrSelected = False
+                else:
+                    endCoord = movePiece(availableMoves, mx, my)
+                    if endCoord == None:
+                        break
+                    #print(selectedCoord)
+                    #print(endCoord)
+                    move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
+                    #print(gs.moveLog)
+                    gs.makeMove(move)
+                    #print(gs.board)
+                    drawGameState(screen, gs)
+                    checkScanner(screen)
+                    alrSelected = False
 
             if e.type == p.QUIT:
                 running = False
-            
-        if moveMade:
-            validMoves = gs.getValidMoves()
-            moveMade = False
-        
-        if gs.checkmate:
-            game_over = True
-            if gs.white_to_move:
-                print("Black wins by checkmate")
-            else:
-                print("White wins by checkmate")
 
-        elif gs.stalemate:
-            game_over = True
-            print("Stalemate")
-        drawGameState(screen, gs)
+        #Black's Turn
+        if gs.whiteToMove == False and alrSelected == False:
+            blackPieces = []
+            alrSelected = True
+            #Get positions of all black pieces on board
+            for r in range(DIMESION):
+                for c in range(DIMESION):
+                    piece = gs.board[r][c]
+                    if piece[0] == "b":
+                        blackPieces.append(r)
+                        blackPieces.append(c)
+            rand_idx = random.randrange(len(blackPieces))
+            if rand_idx % 2 != 0:
+                c = blackPieces[rand_idx]
+                r = blackPieces[rand_idx - 1]
+            else:
+                c = blackPieces[rand_idx + 1]
+                r = blackPieces[rand_idx]
+            selectedPiece = gs.board[r][c]
+            selectedCoord = [r, c]
+            #print("selected Coord " + str(selectedCoord))
+            drawPieces(screen, gs.board)
+            possibleMoves(selectedCoord, gs, screen, selectedPiece)
+            if availableMoves == []:
+                alrSelected = False
+            else:
+                p.draw.rect(screen, p.Color("orange"), p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                endCoord = movePiece(availableMoves, mx, my)
+                p.draw.rect(screen, p.Color("blue"), p.Rect(endCoord[1]*SQ_SIZE, endCoord[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                if endCoord == None:
+                    alrSelected = False
+                move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
+                gs.makeMove(move)
+                drawGameState(screen, gs)
+                checkScanner(screen)
+                alrSelected = False
         clock.tick(MAX_FPS)
         p.display.flip()
+
+'''
+On click, go through all the pieces on the board and see which is touching the cursor so it can be selected. returns selected piece coordinates
+'''
+def selectPiece(mx, my, board, screen):
+    drawGameState(screen, gs) #remove the orange square from the board because a new one is going to be chosen #place pieces on top of newly drawn board
+    for r in range(DIMESION):
+        for c in range(DIMESION):
+            piece = board[r][c] #Get name of piece
+            #print(piece)
+            #Only want the user to move white pieces
+            if piece[0] != "b" and piece != "--" and p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE).collidepoint(mx, my): #see if the cursor coords are within the piece's square
+                p.draw.rect(screen, p.Color("orange"), p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                drawPieces(screen, board)
+                selectedCoord = [r, c]
+                #print(selected)
+                return selectedCoord, piece
+            elif piece == "--":
+                selectedCoord = [-1, -1]
+                #print(selected) 
+    return selectedCoord, piece
+
+'''
+Logic for possible moves for each piece depending on piece type
+'''
+def possibleMoves(selectedCoord, gs, screen, selectedPiece):
+    board = gs.board
+
+    global wP0, wP1,wP2,wP3,wP4,wP5,wP6,wP7, bP0, bP1,bP2,bP3,bP4,bP5,bP6,bP7, availableMoves
+
+    availableMoves = []
+    #drawPieces(screen, gs.board)
+    #selectedCoord[0] = row; selectedCoord[1] = column
+    #check if the pawn has already been moved
+    #change coordinates to display the possible moves then revert the coordinates for future use
+    #print(selectedPiece)
+    if selectedPiece[1] == "P":
+        if gs.whiteToMove == True:
+            if ('wP' + str(selectedCoord[1])) == "wP0":
+                if wP0 == True:
+                    selectedCoord[0] -= 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP0)
+                    selectedCoord[0] += 2
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+                    wP0 = False
+                else:
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+            elif ('wP' + str(selectedCoord[1])) == "wP1":
+                if wP1 == True:
+                    selectedCoord[0] -= 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP1)
+                    selectedCoord[0] += 2
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+                    wP1 = False
+                else:
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board,False)
+                    selectedCoord[0] += 1
+            elif ('wP' + str(selectedCoord[1])) == "wP2":
+                if wP2 == True:
+                    selectedCoord[0] -= 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP2)
+                    selectedCoord[0] += 2
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+                    wP2 = False
+                else:
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+            elif ('wP' + str(selectedCoord[1])) == "wP3":
+                if wP3 == True:
+                    selectedCoord[0] -= 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP3)
+                    selectedCoord[0] += 2
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+                    wP3 = False
+                else:
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+            elif ('wP' + str(selectedCoord[1])) == "wP4":
+                if wP4 == True:
+                    selectedCoord[0] -= 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP4)
+                    selectedCoord[0] += 2
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+                    wP4 = False
+                else:
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+            elif ('wP' + str(selectedCoord[1])) == "wP5":
+                if wP5 == True:
+                    selectedCoord[0] -= 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP5)
+                    selectedCoord[0] += 2
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+                    wP5 = False
+                else:
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+            elif ('wP' + str(selectedCoord[1])) == "wP6":
+                if wP6 == True:
+                    selectedCoord[0] -= 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP6)
+                    selectedCoord[0] += 2
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+                    wP6 = False
+                else:
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+            elif ('wP' + str(selectedCoord[1])) == "wP7":
+                if wP7 == True:
+                    print(selectedCoord)
+                    selectedCoord[0] -= 2
+                    print(selectedCoord)
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, wP7)
+                    print(selectedCoord)
+                    selectedCoord[0] += 2
+                    print(selectedCoord)
+                    selectedCoord[0] -= 1
+                    print(selectedCoord)
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+                    wP7 = False
+                else:
+                    selectedCoord[0] -= 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] += 1
+        else:
+            #Black Pawns
+            if ('bP' + str(selectedCoord[1])) == "bP0":
+                if bP0 == True:
+                    selectedCoord[0] += 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, bP0)
+                    selectedCoord[0] -= 2
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+                    bP0 = False
+                else:
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+            elif ('bP' + str(selectedCoord[1])) == "bP1":
+                if bP1 == True:
+                    selectedCoord[0] += 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, bP1)
+                    selectedCoord[0] -= 2
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+                    bP1 = False
+                else:
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+            elif ('bP' + str(selectedCoord[1])) == "bP2":
+                if bP2 == True:
+                    selectedCoord[0] += 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, bP2)
+                    selectedCoord[0] -= 2
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+                    bP2 = False
+                else:
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+            elif ('bP' + str(selectedCoord[1])) == "bP3":
+                if bP3 == True:
+                    selectedCoord[0] += 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, bP3)
+                    selectedCoord[0] -= 2
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+                    bP3 = False
+                else:
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+            elif ('bP' + str(selectedCoord[1])) == "bP4":
+                if bP4 == True:
+                    selectedCoord[0] += 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, bP4)
+                    selectedCoord[0] -= 2
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+                    bP4 = False
+                else:
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+            elif ('bP' + str(selectedCoord[1])) == "bP5":
+                if bP5 == True:
+                    selectedCoord[0] += 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, bP5)
+                    selectedCoord[0] -= 2
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+                    bP5 = False
+                else:
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+            elif ('bP' + str(selectedCoord[1])) == "bP6":
+                if bP6 == True:
+                    selectedCoord[0] += 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, bP6)
+                    selectedCoord[0] -= 2
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+                    bP6 = False
+                else:
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+            elif ('bP' + str(selectedCoord[1])) == "bP7":
+                if bP7 == True:
+                    selectedCoord[0] += 2
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, bP7)
+                    selectedCoord[0] -= 2
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+                    bP7 = False
+                else:
+                    selectedCoord[0] += 1
+                    drawPossibleMovesP(selectedCoord, "cadetblue2", screen, gs.board, False)
+                    selectedCoord[0] -= 1
+    
+    elif selectedPiece[1] == "R":
+        revert = 0
+        keepGoing = True
+        while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+            revert += 1       
+            selectedCoord[0] -= 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += revert
+
+        keepGoing = True
+        revert = 0
+        while selectedCoord[0] < 7 and keepGoing == True:
+            revert += 1       
+            selectedCoord[0] += 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= revert
+
+        revert = 0
+        keepGoing = True
+        while selectedCoord[1] > 0 and keepGoing == True:
+            revert += 1       
+            selectedCoord[1] -= 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[1] += revert
+
+        keepGoing = True
+        revert = 0
+        while selectedCoord[1] < 7 and keepGoing == True:
+            revert += 1       
+            selectedCoord[1] += 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[1] -= revert
+
+    elif  selectedPiece[1] == "B":
+        revert = 0
+        keepGoing = True
+        if gs.whiteToMove == True:
+            #diagnol up-right
+            try:
+                while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                    revert += 1       
+                    selectedCoord[0] -= 1
+                    selectedCoord[1] += 1
+                    keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+            except:
+                pass
+            keepGoing = False
+            selectedCoord[0] += revert
+            selectedCoord[1] -= revert
+
+            revert = 0
+            keepGoing = True
+            #diagnol up-left
+            try:
+                while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                    revert += 1       
+                    selectedCoord[0] -= 1
+                    selectedCoord[1] -= 1
+                    keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+            except:
+                pass
+            keepGoing = False
+            selectedCoord[0] += revert
+            selectedCoord[1] += revert
+
+            revert = 0
+            keepGoing = True
+            #diagnol down-right
+            try:
+                while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                    revert += 1       
+                    selectedCoord[0] += 1
+                    selectedCoord[1] += 1
+                    keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+            except:
+                pass
+            keepGoing = False
+            selectedCoord[0] -= revert
+            selectedCoord[1] -= revert
+
+            revert = 0
+            keepGoing = True
+            #diagnol down-left
+            try:
+                while keepGoing == True:
+                    revert += 1       
+                    selectedCoord[0] += 1
+                    selectedCoord[1] -= 1
+                    keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+            except:
+                pass
+            keepGoing = False
+            selectedCoord[0] -= revert
+            selectedCoord[1] += revert
+
+    elif selectedPiece[1] == "N":
+        #diagnol up-right
+        selectedCoord[0] -= 2
+        selectedCoord[1] += 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += 2
+        selectedCoord[1] -= 1
+
+        #diagnol up-left
+        selectedCoord[0] -= 2
+        selectedCoord[1] -= 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += 2
+        selectedCoord[1] += 1
+
+        #diagnol down-right 
+        selectedCoord[0] += 2
+        selectedCoord[1] += 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= 2
+        selectedCoord[1] -= 1
+
+        #diagnol down-left
+        selectedCoord[0] += 2
+        selectedCoord[1] -= 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= 2
+        selectedCoord[1] += 1
+
+        #diagnol left-up
+        selectedCoord[0] += 1
+        selectedCoord[1] -= 2
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= 1
+        selectedCoord[1] += 2
+
+        #diagnol left-down
+        selectedCoord[0] -= 1
+        selectedCoord[1] -= 2
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += 1
+        selectedCoord[1] += 2
+
+        #diagnol right-up
+        selectedCoord[0] -= 1
+        selectedCoord[1] += 2
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += 1
+        selectedCoord[1] -= 2
+
+        #diagnol right-down
+        selectedCoord[0] += 1
+        selectedCoord[1] += 2
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= 1
+        selectedCoord[1] -= 2
+
+        #diagnol up-left
+        selectedCoord[0] += 1
+        selectedCoord[1] -= 2
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= 1
+        selectedCoord[1] += 2
+
+    elif selectedPiece[1] == "Q":
+        #Rook attributes
+        revert = 0
+        keepGoing = True
+        while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+            revert += 1       
+            selectedCoord[0] -= 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += revert
+
+        keepGoing = True
+        revert = 0
+        while selectedCoord[0] < 7 and keepGoing == True:
+            revert += 1       
+            selectedCoord[0] += 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= revert
+
+        revert = 0
+        keepGoing = True
+        while selectedCoord[1] > 0 and keepGoing == True:
+            revert += 1       
+            selectedCoord[1] -= 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[1] += revert
+
+        keepGoing = True
+        revert = 0
+        while selectedCoord[1] < 7 and keepGoing == True:
+            revert += 1       
+            selectedCoord[1] += 1
+            keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[1] -= revert
+
+        #Bishop attributes
+        revert = 0
+        keepGoing = True
+        #diagnol up-right
+        try:
+            while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                revert += 1       
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 1
+                keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        except:
+            pass
+        keepGoing = False
+        selectedCoord[0] += revert
+        selectedCoord[1] -= revert
+
+        revert = 0
+        keepGoing = True
+        #diagnol up-left
+        try:
+            while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                revert += 1       
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 1
+                keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        except:
+            pass
+        keepGoing = False
+        selectedCoord[0] += revert
+        selectedCoord[1] += revert
+
+        revert = 0
+        keepGoing = True
+        #diagnol down-right
+        try:
+            while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                revert += 1       
+                selectedCoord[0] += 1
+                selectedCoord[1] += 1
+                keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        except:
+            pass
+        keepGoing = False
+        selectedCoord[0] -= revert
+        selectedCoord[1] -= revert
+
+        revert = 0
+        keepGoing = True
+        #diagnol down-left
+        try:
+            while keepGoing == True:
+                revert += 1       
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 1
+                keepGoing = drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        except:
+            pass
+        keepGoing = False
+        selectedCoord[0] -= revert
+        selectedCoord[1] += revert
+
+    elif  selectedPiece[1] == "K":
+        #Straight moves
+        selectedCoord[0] -= 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += 1
+        selectedCoord[0] += 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= 1
+        selectedCoord[1] -= 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[1] += 1
+        selectedCoord[1] += 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[1] -= 1
+
+        #Diagnol Moves
+        selectedCoord[0] -= 1
+        selectedCoord[1] -= 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += 1
+        selectedCoord[1] += 1
+        selectedCoord[0] += 1
+        selectedCoord[1] += 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= 1
+        selectedCoord[1] -= 1
+        selectedCoord[0] += 1
+        selectedCoord[1] -= 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] -= 1
+        selectedCoord[1] += 1
+        selectedCoord[0] -= 1
+        selectedCoord[1] += 1
+        if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+            drawPossibleMoves(selectedCoord, "cadetblue2", screen, gs.board)
+        selectedCoord[0] += 1
+        selectedCoord[1] -= 1
+
+
+'''
+Draw the possible moves. Used by possibleMoves to create a visual of the possible moves.
+Choice for color so I can easily change it so the ending spot for each possible move is a different color than the path
+Checks if another piece is blocking the path
+'''
+def drawPossibleMoves(coordinate, color, screen, board):
+    global availableMoves
+    if coordinate[0] < 0 or coordinate[0] > 7:
+        return False
+    if coordinate[1] < 0 or coordinate[1] > 7:
+        return False
+    piece = board[coordinate[0]][coordinate[1]]
+    #print("piece " + str(piece))
+    #print("piece's coord " + str(coordinate))
+    if gs.whiteToMove == True:
+        if piece[0] != "w": #It isn't a valid move to attack your own color
+            availableMoves.append(coordinate[0])
+            availableMoves.append(coordinate[1])
+        if piece == "--":
+            p.draw.rect(screen, p.Color(color), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            return True
+        if piece[0] == "b":
+            p.draw.rect(screen, p.Color("red"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            drawPieces(screen, board)
+            return False
+        else:
+            return False
+    else:
+        if piece[0] != "b": #It isn't a valid move to attack your own color
+            availableMoves.append(coordinate[0])
+            availableMoves.append(coordinate[1])
+            if piece == "--":
+                p.draw.rect(screen, p.Color(color), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                return True
+            elif piece[0] == "w":
+                p.draw.rect(screen, p.Color("red"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                drawPieces(screen, board)
+                return False
+        else:
+            return False
+
+'''
+Same as drawPossibleMoves but it is for the Pawn's special attacks
+'''
+def drawPossibleMovesP(coordinate, color, screen, board, firstMove):
+    global availableMoves
+    if coordinate[0] < 0 or coordinate[0] > 7:
+        return False
+    if coordinate[1] < 0 or coordinate[1] > 7:
+        return False
+    piece = board[coordinate[0]][coordinate[1]]
+    #print("piece " + piece)
+    #print("piece's coord " + str(coordinate[0]) + " " + str(coordinate[1]))
+
+    if piece == "--":
+        p.draw.rect(screen, p.Color(color), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        availableMoves.append(coordinate[0])
+        availableMoves.append(coordinate[1])
+    if gs.whiteToMove == True and firstMove == False:
+        #check if there is an enemy piece for the white pawn diagnally to attack
+        try:
+            coordinate[1] += 1
+            #print("Diagnal attack " + str(coordinate))
+            piece = board[coordinate[0]][coordinate[1]]
+            if piece[0] == "b":
+                p.draw.rect(screen, p.Color("red"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                availableMoves.append(coordinate[0])
+                availableMoves.append(coordinate[1])
+        except:
+            pass
+        coordinate[1] -= 1
+        try:
+            coordinate[1] -= 1
+            piece = board[coordinate[0]][coordinate[1]]
+            if piece[0] == "b":
+                p.draw.rect(screen, p.Color("red"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                availableMoves.append(coordinate[0])
+                availableMoves.append(coordinate[1])
+        except:
+            pass
+        coordinate[1] += 1
+        #region EnPassant
+        #En Passant attack: attack diagnally behind enemy piece to capture it
+        # try:
+        #     coordinate[0] +=1
+        #     coordinate[1] += 1
+        #     piece = board[coordinate[0]][coordinate[1]]
+        #     coordinate[0] -=1
+        #     coordinate[1] -= 1
+        #     if piece[0] == "b":
+        #         print("here")
+        #         coordinate[1] += 1
+        #         p.draw.rect(screen, p.Color("red"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        #         print(coordinate)
+        #         availableMoves.append(coordinate[0])
+        #         availableMoves.append(coordinate[1])
+        #         gs.enPassant = True
+        # except:
+        #     pass
+        # coordinate[1] -= 1
+        # print(coordinate)
+
+        # try:
+        #     coordinate[0] +=1
+        #     coordinate[1] -= 1
+        #     piece = board[coordinate[0]][coordinate[1]]
+        #     coordinate[0] -=1
+        #     coordinate[1] += 1
+        #     if piece[0] == "b":
+        #         coordinate[1] -= 1
+        #         p.draw.rect(screen, p.Color("red"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        #         availableMoves.append(coordinate[0])
+        #         availableMoves.append(coordinate[1])
+        #         gs.enPassant = True
+        # except:
+        #     pass
+        # coordinate[1] += 1
+        #endregion
+        #print("after "+ str(coordinate))
+    elif gs.whiteToMove == False:
+        #check if there is an enemy piece for the white pawn diagnally to attack
+        try:
+            coordinate[1] -= 1
+            piece = board[coordinate[0]][coordinate[1]]
+            if piece[0] == "w":
+                p.draw.rect(screen, p.Color("red"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                availableMoves.append(coordinate[0])
+                availableMoves.append(coordinate[1])
+        except:
+            pass
+        coordinate[1] += 1
+        try:
+            coordinate[1] += 1
+            #print(coordinate)
+            piece = board[coordinate[0]][coordinate[1]]
+            if piece[0] == "w":
+                p.draw.rect(screen, p.Color("red"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                availableMoves.append(coordinate[0])
+                availableMoves.append(coordinate[1])
+        except:
+            pass
+        coordinate[1] -= 1
+    drawPieces(screen, board)
+
+'''
+Gets end coordinates for player piece move.
+'''
+def movePiece(availableMoves, mx, my):
+    if gs.whiteToMove == True:
+        for r,c in zip(availableMoves[0::2], availableMoves[1::2]):
+            if p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE).collidepoint(mx, my): #see if the cursor coords are within the piece's square
+                endCoord = [r, c]
+                return endCoord
+    else:
+        #print(availableMoves)
+        rand_idx = random.randrange(len(availableMoves))
+        #print(rand_idx)
+        if rand_idx % 2 != 0:
+            c = availableMoves[rand_idx]
+            r = availableMoves[rand_idx - 1]
+        else:
+            c = availableMoves[rand_idx + 1]
+            r = availableMoves[rand_idx]
+        endCoord = [r, c]
+        #print(endCoord)
+        return endCoord
+
+'''
+After everymover scan the board to see if there is a check
+'''
+def checkScanner(screen):
+    board = gs.board
+    #drawPieces(screen, gs.board)
+    #selectedCoord[0] = row; selectedCoord[1] = column
+    #check if the pawn has already been moved
+    #change coordinates to display the possible moves then revert the coordinates for future use
+    #print(selectedPiece)
+    for r in range(DIMESION):
+        for c in range(DIMESION):
+            piece = gs.board[r][c]
+            selectedCoord = [r, c]
+            if piece == "wP":
+                selectedCoord[0] -= 1
+                drawCheckMovesP(selectedCoord,   screen, gs.board, True)
+                selectedCoord[0] += 1
+            elif piece == "bP":
+                selectedCoord[0] += 1
+                drawCheckMovesP(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= 1
+            elif piece == "wR":
+                revert = 0
+                keepGoing = True
+                while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                    revert += 1       
+                    selectedCoord[0] -= 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] += revert
+
+                keepGoing = True
+                revert = 0
+                while selectedCoord[0] < 7 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[0] += 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= revert
+
+                revert = 0
+                keepGoing = True
+                while selectedCoord[1] > 0 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[1] -= 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[1] += revert
+
+                keepGoing = True
+                revert = 0
+                while selectedCoord[1] < 7 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[1] += 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[1] -= revert
+
+            elif piece == "bR":
+                revert = 0
+                keepGoing = True
+                while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                    revert += 1       
+                    selectedCoord[0] -= 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] += revert
+
+                keepGoing = True
+                revert = 0
+                while selectedCoord[0] < 7 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[0] += 1
+                    keepGoing = drawCheckMoves(selectedCoord, screen, gs.board, False)
+                selectedCoord[0] -= revert
+
+                revert = 0
+                keepGoing = True
+                while selectedCoord[1] > 0 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[1] -= 1
+                    keepGoing = drawCheckMoves(selectedCoord, screen, gs.board, False)
+                selectedCoord[1] += revert
+
+                keepGoing = True
+                revert = 0
+                while selectedCoord[1] < 7 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[1] += 1
+                    keepGoing = drawCheckMoves(selectedCoord, screen, gs.board, False)
+                selectedCoord[1] -= revert
+
+            elif  piece == "wB":
+                revert = 0
+                keepGoing = True
+                if gs.whiteToMove == True:
+                    #diagnol up-right
+                    try:
+                        while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                            revert += 1       
+                            selectedCoord[0] -= 1
+                            selectedCoord[1] += 1
+                            keepGoing = drawCheckMoves(selectedCoord, screen, gs.board, True)
+                    except:
+                        pass
+                    keepGoing = False
+                    selectedCoord[0] += revert
+                    selectedCoord[1] -= revert
+
+                    revert = 0
+                    keepGoing = True
+                    #diagnol up-left
+                    try:
+                        while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                            revert += 1       
+                            selectedCoord[0] -= 1
+                            selectedCoord[1] -= 1
+                            keepGoing = drawCheckMoves(selectedCoord, screen, gs.board, True)
+                    except:
+                        pass
+                    keepGoing = False
+                    selectedCoord[0] += revert
+                    selectedCoord[1] += revert
+
+                    revert = 0
+                    keepGoing = True
+                    #diagnol down-right
+                    try:
+                        while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                            revert += 1       
+                            selectedCoord[0] += 1
+                            selectedCoord[1] += 1
+                            keepGoing = drawCheckMoves(selectedCoord, screen, gs.board, True)
+                    except:
+                        pass
+                    keepGoing = False
+                    selectedCoord[0] -= revert
+                    selectedCoord[1] -= revert
+
+                    revert = 0
+                    keepGoing = True
+                    #diagnol down-left
+                    try:
+                        while keepGoing == True:
+                            revert += 1       
+                            selectedCoord[0] += 1
+                            selectedCoord[1] -= 1
+                            keepGoing = drawCheckMoves(selectedCoord, screen, gs.board, True)
+                    except:
+                        pass
+                    keepGoing = False
+                    selectedCoord[0] -= revert
+                    selectedCoord[1] += revert
+
+            elif  piece == "bB":
+                revert = 0
+                keepGoing = True
+                if gs.whiteToMove == True:
+                    #diagnol up-right
+                    try:
+                        while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                            revert += 1       
+                            selectedCoord[0] -= 1
+                            selectedCoord[1] += 1
+                            keepGoing = drawCheckMoves(selectedCoord, screen, gs.board, False)
+                    except:
+                        pass
+                    keepGoing = False
+                    selectedCoord[0] += revert
+                    selectedCoord[1] -= revert
+
+                    revert = 0
+                    keepGoing = True
+                    #diagnol up-left
+                    try:
+                        while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                            revert += 1       
+                            selectedCoord[0] -= 1
+                            selectedCoord[1] -= 1
+                            keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                    except:
+                        pass
+                    keepGoing = False
+                    selectedCoord[0] += revert
+                    selectedCoord[1] += revert
+
+                    revert = 0
+                    keepGoing = True
+                    #diagnol down-right
+                    try:
+                        while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                            revert += 1       
+                            selectedCoord[0] += 1
+                            selectedCoord[1] += 1
+                            keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                    except:
+                        pass
+                    keepGoing = False
+                    selectedCoord[0] -= revert
+                    selectedCoord[1] -= revert
+
+                    revert = 0
+                    keepGoing = True
+                    #diagnol down-left
+                    try:
+                        while keepGoing == True:
+                            revert += 1       
+                            selectedCoord[0] += 1
+                            selectedCoord[1] -= 1
+                            keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                    except:
+                        pass
+                    keepGoing = False
+                    selectedCoord[0] -= revert
+                    selectedCoord[1] += revert
+
+            elif piece == "wN":
+                #diagnol up-right
+                selectedCoord[0] -= 2
+                selectedCoord[1] += 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] += 2
+                selectedCoord[1] -= 1
+
+                #diagnol up-left
+                selectedCoord[0] -= 2
+                selectedCoord[1] -= 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] += 2
+                selectedCoord[1] += 1
+
+                #diagnol down-right 
+                selectedCoord[0] += 2
+                selectedCoord[1] += 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= 2
+                selectedCoord[1] -= 1
+
+                #diagnol down-left
+                selectedCoord[0] += 2
+                selectedCoord[1] -= 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= 2
+                selectedCoord[1] += 1
+
+                #diagnol left-up
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 2
+
+                #diagnol left-down
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] += 1
+                selectedCoord[1] += 2
+
+                #diagnol right-up
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 2
+
+                #diagnol right-down
+                selectedCoord[0] += 1
+                selectedCoord[1] += 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 2
+
+                #diagnol up-left
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 2
+
+            elif piece == "bN":
+                #diagnol up-right
+                selectedCoord[0] -= 2
+                selectedCoord[1] += 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] += 2
+                selectedCoord[1] -= 1
+
+                #diagnol up-left
+                selectedCoord[0] -= 2
+                selectedCoord[1] -= 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] += 2
+                selectedCoord[1] += 1
+
+                #diagnol down-right 
+                selectedCoord[0] += 2
+                selectedCoord[1] += 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= 2
+                selectedCoord[1] -= 1
+
+                #diagnol down-left
+                selectedCoord[0] += 2
+                selectedCoord[1] -= 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= 2
+                selectedCoord[1] += 1
+
+                #diagnol left-up
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 2
+
+                #diagnol left-down
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] += 1
+                selectedCoord[1] += 2
+
+                #diagnol right-up
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 2
+
+                #diagnol right-down
+                selectedCoord[0] += 1
+                selectedCoord[1] += 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 2
+
+                #diagnol up-left
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 2
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 2
+
+            elif piece == "wQ":
+                #Rook attributes
+                revert = 0
+                keepGoing = True
+                while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                    revert += 1       
+                    selectedCoord[0] -= 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] += revert
+
+                keepGoing = True
+                revert = 0
+                while selectedCoord[0] < 7 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[0] += 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= revert
+
+                revert = 0
+                keepGoing = True
+                while selectedCoord[1] > 0 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[1] -= 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[1] += revert
+
+                keepGoing = True
+                revert = 0
+                while selectedCoord[1] < 7 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[1] += 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[1] -= revert
+
+                #Bishop attributes
+                revert = 0
+                keepGoing = True
+                #diagnol up-right
+                try:
+                    while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                        revert += 1       
+                        selectedCoord[0] -= 1
+                        selectedCoord[1] += 1
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                except:
+                    pass
+                keepGoing = False
+                selectedCoord[0] += revert
+                selectedCoord[1] -= revert
+
+                revert = 0
+                keepGoing = True
+                #diagnol up-left
+                try:
+                    while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                        revert += 1       
+                        selectedCoord[0] -= 1
+                        selectedCoord[1] -= 1
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                except:
+                    pass
+                keepGoing = False
+                selectedCoord[0] += revert
+                selectedCoord[1] += revert
+
+                revert = 0
+                keepGoing = True
+                #diagnol down-right
+                try:
+                    while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                        revert += 1       
+                        selectedCoord[0] += 1
+                        selectedCoord[1] += 1
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                except:
+                    pass
+                keepGoing = False
+                selectedCoord[0] -= revert
+                selectedCoord[1] -= revert
+
+                revert = 0
+                keepGoing = True
+                #diagnol down-left
+                try:
+                    while keepGoing == True:
+                        revert += 1       
+                        selectedCoord[0] += 1
+                        selectedCoord[1] -= 1
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                except:
+                    pass
+                keepGoing = False
+                selectedCoord[0] -= revert
+                selectedCoord[1] += revert
+
+                #Diagnol Moves
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] += 1
+                selectedCoord[1] += 1
+                selectedCoord[0] += 1
+                selectedCoord[1] += 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 1
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 1
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, True)
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 1
+
+            elif piece == "bQ":
+                #Rook attributes
+                revert = 0
+                keepGoing = True
+                while selectedCoord[0] > 0 and keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                    revert += 1       
+                    selectedCoord[0] -= 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] += revert
+
+                keepGoing = True
+                revert = 0
+                while selectedCoord[0] < 7 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[0] += 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= revert
+
+                revert = 0
+                keepGoing = True
+                while selectedCoord[1] > 0 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[1] -= 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[1] += revert
+
+                keepGoing = True
+                revert = 0
+                while selectedCoord[1] < 7 and keepGoing == True:
+                    revert += 1       
+                    selectedCoord[1] += 1
+                    keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[1] -= revert
+
+                #Bishop attributes
+                revert = 0
+                keepGoing = True
+                #diagnol up-right
+                try:
+                    while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                        revert += 1       
+                        selectedCoord[0] -= 1
+                        selectedCoord[1] += 1
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                except:
+                    pass
+                keepGoing = False
+                selectedCoord[0] += revert
+                selectedCoord[1] -= revert
+
+                revert = 0
+                keepGoing = True
+                #diagnol up-left
+                try:
+                    while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                        revert += 1       
+                        selectedCoord[0] -= 1
+                        selectedCoord[1] -= 1
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                except:
+                    pass
+                keepGoing = False
+                selectedCoord[0] += revert
+                selectedCoord[1] += revert
+
+                revert = 0
+                keepGoing = True
+                #diagnol down-right
+                try:
+                    while keepGoing == True: # get all the available moves up untill a piece blocking the path or the edge of the board
+                        revert += 1       
+                        selectedCoord[0] += 1
+                        selectedCoord[1] += 1
+                        keepGoing = drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                except:
+                    pass
+                keepGoing = False
+                selectedCoord[0] -= revert
+                selectedCoord[1] -= revert
+
+                revert = 0
+                keepGoing = True
+                #diagnol down-left
+                try:
+                    while keepGoing == True:
+                        revert += 1       
+                        selectedCoord[0] += 1
+                        selectedCoord[1] -= 1
+                        keepGoing = drawCheckMoves(selectedCoord , screen, gs.board, False)
+                except:
+                    pass
+                keepGoing = False
+                selectedCoord[0] -= revert
+                selectedCoord[1] += revert
+
+                #Diagnol Moves
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] += 1
+                selectedCoord[1] += 1
+                selectedCoord[0] += 1
+                selectedCoord[1] += 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= 1
+                selectedCoord[1] -= 1
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 1
+                selectedCoord[0] -= 1
+                selectedCoord[1] += 1
+                if selectedCoord[0] >= 0 and selectedCoord[0] <=7 and selectedCoord[1] >= 0 and selectedCoord[1] <=7:
+                    drawCheckMoves(selectedCoord  , screen, gs.board, False)
+                selectedCoord[0] += 1
+                selectedCoord[1] -= 1
+'''
+Checks the possible moves for the piece to see if it checks the king
+'''
+def drawCheckMovesP(coordinate, screen, board, isWhite):
+    global solved, checkBool
+    if coordinate[0] < 0 or coordinate[0] > 7:
+        return False
+    if coordinate[1] < 0 or coordinate[1] > 7:
+        return False
+    piece = board[coordinate[0]][coordinate[1]]
+    #print("piece " + piece)
+    #print("piece's coord " + str(coordinate[0]) + " " + str(coordinate[1]))
+    #check if there is an enemy piece for the white pawn diagnally to attack
+    try:
+        coordinate[1] += 1
+        #print("Diagnal attack " + str(coordinate))
+        piece = board[coordinate[0]][coordinate[1]]
+        if piece == "bK":
+            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if checkBool == True:
+                solved = False #change check to unresolved
+            else:
+                solved = False
+                check(piece, True, screen)
+    except:
+        solved = True
+    coordinate[1] -= 1
+    try:
+        coordinate[1] -= 1
+        piece = board[coordinate[0]][coordinate[1]]
+        if piece == "bK":
+            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if checkBool == True:
+                solved = False
+            else:
+                solved = False
+                check(piece, True, screen)
+    except:
+        solved = True
+    coordinate[1] += 1
+
+    #print("after "+ str(coordinate))
+    #check if there is an enemy piece for the white pawn diagnally to attack
+    try:
+        coordinate[1] -= 1
+        piece = board[coordinate[0]][coordinate[1]]
+        if piece == "wK":
+            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if checkBool == True:
+                solved = False
+            else:
+                solved = False
+                check(piece, False, screen)
+    except:
+        solved = True
+    coordinate[1] += 1
+    try:
+        coordinate[1] += 1
+        #print(coordinate)
+        piece = board[coordinate[0]][coordinate[1]]
+        if piece == "wK":
+            p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if checkBool == True:
+                solved = False
+            else:
+                solved = False
+                check(piece, False, screen)
+    except:
+        solved = True
+    coordinate[1] -= 1
+    drawGameState(screen, gs)
+
+def drawCheckMoves(coordinate, screen, board, isWhite):
+    global solved, checkBool
+    if coordinate[0] < 0 or coordinate[0] > 7:
+        return False
+    if coordinate[1] < 0 or coordinate[1] > 7:
+        return False
+    piece = board[coordinate[0]][coordinate[1]]
+    if piece == "bK":
+        p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        if checkBool == True:
+                solved = False #change check to unresolved
+        else:
+            solved = False
+            check(piece, True, screen)
+    elif piece == "wK":
+        p.draw.rect(screen, p.Color("purple"), p.Rect(coordinate[1]*SQ_SIZE, coordinate[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        if checkBool == True:
+                solved = False #change check to unresolved
+        else:
+            solved = False
+            check(piece, False, screen)
+    else:
+        solved = True
+    drawGameState(screen, gs)
+
+
+'''
+Called when the king is in check. Used for the logic behind getting out of check.
+'''
+def check(coordOfCheck, blackIsInCheck, screen):
+    global checkBool, solved
+    print("check")
+    checkBool = True
+    if blackIsInCheck:
+        #go through all possible black moves and append the ones that stop the check to avaibleMoves
+        #run check for check after each 
+        pieces = []
+        rEndWorkingMoves = []
+        cEndWorkingMoves = []
+        rStartWorkingMoves = []
+        cStartWorkingMoves = []
+        for r in range(DIMESION):
+            for c in range(DIMESION):
+                piece = gs.board[r][c]
+                if piece[0] == "b":
+                    #print(piece)
+                    selectedCoord = [r, c]
+                    # print(selectedCoord)
+                    possibleMoves(selectedCoord, gs, screen, piece)
+                    if availableMoves != []:
+                        # print(piece)
+                        # print(availableMoves)
+                        cList = []
+                        rList = []
+                        for y in range(len(availableMoves)):
+                            if y%2 == 0:
+                                rList.append(availableMoves[y])
+                            else:
+                                cList.append(availableMoves[y])
+                            # print(availableMoves)
+                            # print(rList)
+                            # print(cList)
+                        for x in range(len(rList)):
+                            r = rList[x]
+                            c = cList[x]
+                            endCoord = [r, c]
+                            move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
+                            # print(selectedCoord)
+                            # print(endCoord)
+                            gs.makeMove(move)
+                            checkScanner(screen)
+                            if solved == True:
+                                rEndWorkingMoves.append(endCoord[0])
+                                cEndWorkingMoves.append(endCoord[1])
+                                rStartWorkingMoves.append(selectedCoord[0])
+                                cStartWorkingMoves.append(selectedCoord[1])
+                                print(rEndWorkingMoves)
+                                solved = False
+                            gs.resetPiece = True
+                            move = ChessEngine.Move(endCoord, selectedCoord, gs.board)
+                            gs.makeMove(move)
+                            gs.resetPiece = False
+                    if rEndWorkingMoves == []:
+                        print("checkmate")
+                        # break
+        #Get positions of all black pieces on board
+        num = random.randrange(len(rEndWorkingMoves))
+        r = rEndWorkingMoves[num]
+        c = cEndWorkingMoves[num]
+        endCoord = [rEndWorkingMoves[num], cEndWorkingMoves[num]]
+        print(endCoord)
+        print(gs.board)
+        selectedPiece = gs.board[r][c]
+        selectedCoord = [r, c]
+        move = ChessEngine.Move(selectedCoord, endCoord, gs.board)
+        print("dsauas")
+        gs.makeMove(move)
+        print(gs.board)
+        print("ashfashoasfhfioas")
+        #checkScanner(screen)
+    drawGameState(screen, gs)
+    checkBool = False
+
+
+
+
 
 '''
 Responsible for all the graphics within a current game state.
